@@ -46,38 +46,25 @@ const sendRainAlert = (city, rainHours) => {
     });
 };
 
-// Weather API endpoint
 app.get('/weather', async (req, res) => {
     const apiKey = process.env.API_KEY;
-    const city = req.query.city || 'Hatod'; // Default to Hatod if no city is specified
+    const city = req.query.city || 'Hatod';
+    console.log("Fetching weather data for city:", city);  // Log the city being fetched
+    console.log("API Key:", apiKey); // Log API Key for debugging
 
     const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
 
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
+        console.log("API Response:", data);  // Log the response
 
         if (data.cod !== "200") {
+            console.error("API Error:", data);
             return res.status(404).json({ error: data.message });
         }
 
-        // Check for rain in the forecast data
-        let rainHours = [];
-        for (let i = 0; i < data.list.length; i++) {
-            const hourForecast = data.list[i];
-            if (hourForecast.rain) {
-                const forecastDate = new Date(hourForecast.dt * 1000);
-                const time = forecastDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-                rainHours.push(`Rain expected at ${time} on ${forecastDate.toLocaleDateString()}`);
-            }
-        }
-
-        // If there are rain hours, send alert
-        if (rainHours.length > 0) {
-            sendRainAlert(city, rainHours);
-        }
-
-        res.json(data); // Send JSON data to the client
+        res.json(data);
     } catch (error) {
         console.error('Error fetching weather data:', error);
         res.status(500).send('Error retrieving weather data');
