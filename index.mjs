@@ -1,3 +1,4 @@
+// Import required modules
 import express from 'express';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
@@ -6,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import nodemailer from 'nodemailer';
 
+// Initialize environment variables
 dotenv.config();
 
 const app = express();
@@ -44,10 +46,10 @@ const sendRainAlert = (city, rainHours) => {
     });
 };
 
-// Fetch weather data and send an alert if rain is forecasted
+// Weather API endpoint
 app.get('/weather', async (req, res) => {
     const apiKey = process.env.API_KEY;
-    const city = req.query.city || 'Hatod';
+    const city = req.query.city || 'Hatod'; // Default to Hatod if no city is specified
 
     const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
 
@@ -59,6 +61,7 @@ app.get('/weather', async (req, res) => {
             return res.status(404).json({ error: data.message });
         }
 
+        // Check for rain in the forecast data
         let rainHours = [];
         for (let i = 0; i < data.list.length; i++) {
             const hourForecast = data.list[i];
@@ -69,17 +72,17 @@ app.get('/weather', async (req, res) => {
             }
         }
 
+        // If there are rain hours, send alert
         if (rainHours.length > 0) {
             sendRainAlert(city, rainHours);
         }
 
-        res.json(data);
+        res.json(data); // Send JSON data to the client
     } catch (error) {
         console.error('Error fetching weather data:', error);
         res.status(500).send('Error retrieving weather data');
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-});
+// Export the app to be used by Vercel
+export default app;
